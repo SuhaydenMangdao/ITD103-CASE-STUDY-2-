@@ -1,0 +1,3 @@
+connect arduino to wifi
+connect arduino to MongoDB database
+visualize the data available in MongoDb using javascript

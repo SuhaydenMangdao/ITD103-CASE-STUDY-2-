@@ -1,0 +1,136 @@
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+
+const char* ssid = "POCO M3";
+const char* password = "e150fffb5f94";
+WiFiClient client;
+HTTPClient http;
+
+const int pirMotionPin = D2;
+const int pirExitPin = D3;
+int pirMotionState = LOW;
+int pirExitState = LOW;
+int entranceCounter = 0;
+int exitCounter = 0;
+const int maxEntrances = 6;
+bool isAsleep = false;
+
+void connectToWiFi() {
+  Serial.begin(115200);
+  Serial.println();
+  Serial.println("Connecting to WiFi...");
+
+  WiFi.begin(ssid, password);
+  int maxRetries = 20;
+  int retries = 0;
+
+  while (WiFi.status() != WL_CONNECTED && retries < maxRetries) {
+    delay(500);
+    Serial.print(".");
+    retries++;
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println(" connected");
+    Serial.println("WiFi connected successfully!");
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println();
+    Serial.println("Failed to connect to WiFi.");
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(pirMotionPin, INPUT);
+  pinMode(pirExitPin, INPUT);
+  connectToWiFi();
+}
+
+void loop() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi disconnected!");
+    connectToWiFi();
+  }
+
+  int newPirMotionState = digitalRead(pirMotionPin);
+  int newPirExitState = digitalRead(pirExitPin);
+
+  if (!isAsleep && newPirMotionState == HIGH) {
+    Serial.println("Motion detected on entrance!");
+    entranceCounter++;
+    delay(2000);
+
+    if (entranceCounter >= maxEntrances) {
+      isAsleep = true;
+      Serial.println("Maximum entrance limit reached, waiting for exit...");
+    }
+  }
+
+  if (isAsleep && newPirExitState == HIGH) {
+    if (entranceCounter > 0) {
+      Serial.println("Exit detected!");
+      exitCounter++;
+      entranceCounter--;
+      delay(2000);
+    }
+  }
+
+  delay(50);
+
+  if (!isAsleep && (maxEntrances - entranceCounter > 0)) {
+    digitalWrite(pirMotionPin, HIGH);
+  } else {
+    digitalWrite(pirMotionPin, LOW);
+  }
+
+  if (!isAsleep) {
+    if (newPirExitState == HIGH) {
+      if (entranceCounter > 0) {
+        Serial.println("Exit detected!");
+        exitCounter++;
+        entranceCounter--;
+        delay(2000);
+      }
+    }
+  }
+
+  // Check WiFi connection and send sensor data if connected
+  if (WiFi.status() == WL_CONNECTED) {
+    String entranceUrl = "http://192.168.254.103:3001/addEntranceData/?count=" + String(entranceCounter);
+    String exitUrl = "http://192.168.254.103:3001/addExitData/?count=" + String(exitCounter);
+
+    // Send entrance data
+    http.begin(client, entranceUrl);
+    int httpResponseCode = http.POST("");
+
+    if (httpResponseCode > 0) {
+      Serial.println("HTTP Response code: " + String(httpResponseCode));
+      String response = http.getString();
+      Serial.println("Response: " + response);
+    } else {
+      Serial.print("Error sending entrance data. HTTP Response code: ");
+      Serial.println(httpResponseCode);
+    }
+    http.end();
+
+    // Send exit data
+    http.begin(client, exitUrl);
+    httpResponseCode = http.POST("");
+
+    if (httpResponseCode > 0) {
+      Serial.println("HTTP Response code: " + String(httpResponseCode));
+      String response = http.getString();
+      Serial.println("Response: " + response);
+    } else {
+      Serial.print("Error sending exit data. HTTP Response code: ");
+      Serial.println(httpResponseCode);
+    }
+    http.end();
+  } else {
+    Serial.println("WiFi not connected. Unable to send data to the server.");
+  }
+
+  delay(10000);
+}

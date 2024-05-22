@@ -1,0 +1,21 @@
+Specs:
+Wemos D1 Wifi Uno R3 Esp8266
+
+PIR Motion Sensor SR501 HC-SR501 Module 2pcs
+
+ServoMotor
+
+
+The 2 PIR motions sensors handles the entrance and exit:
+
+PIR sensor 1 handles the entrance and it connects with the servomotor
+PIR sensor 2 handles the exit
+
+
+codelogic:
+
+if PIR sensor 1 detects 3 vehicles maximum the servo motor will closed
+
+until PIR sensor 2 detects any vehicle motion 
+
+
