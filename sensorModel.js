@@ -9,18 +9,6 @@ const SensorModel = mongoose.model('SensorModel', sensorSchema)
 
 module.exports = SensorModel;*/
 
-/*const mongoose = require('mongoose');
-
-// Define schema for the sensor data
-const sensorSchema = new mongoose.Schema({
-    time: { type: String, required: true }, // Changed type to String to handle custom time format
-    count: { type: Number, required: true } // Made count a required field
-});
-
-// Create a model for the sensor data
-const SensorModel = mongoose.model('SensorModel', sensorSchema);
-
-module.exports = SensorModel;*/
 
 const mongoose = require('mongoose');
 
