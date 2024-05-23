@@ -1,6 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const moment = require('moment-timezone');
+const SensorModel = require('./sensorModel'); // Import the sensor model
+
 dotenv.config();
 const app = express();
 const port = 3001;
@@ -18,56 +21,72 @@ mongoose.connect(process.env.MONGO_URL, {
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// Define schemas and models for the entrance and exit sensors
-const entranceSensorSchema = new mongoose.Schema({
-  _id: mongoose.Schema.Types.ObjectId,
-  count: Number,
-  timestamp: { type: Date, default: Date.now }
-}, { collection: 'entranceSensor' });
-
-const exitSensorSchema = new mongoose.Schema({
-  _id: mongoose.Schema.Types.ObjectId,
-  count: Number,
-  timestamp: { type: Date, default: Date.now }
-}, { collection: 'exitSensor' });
-
-const EntranceSensor = mongoose.model('EntranceSensor', entranceSensorSchema);
-const ExitSensor = mongoose.model('ExitSensor', exitSensorSchema);
-
 // Endpoint to receive entrance sensor data
-app.post('/addEntranceData', async (req, res) => {
-  const { count } = req.query;
+app.get('/addEntranceData', async (req, res) => {
+  const { count, time } = req.query;
 
-  if (!count) {
-    return res.status(400).send('Missing count parameter');
+  if (count === undefined || time === undefined) {
+    return res.status(400).send('Missing count or time parameter');
   }
 
   try {
-    const entranceData = new EntranceSensor({ count: parseInt(count) });
+    const entranceData = new SensorModel({ count: parseInt(count), time: convertToPST(time) });
     await entranceData.save();
     res.status(200).send('Entrance sensor data saved successfully');
   } catch (error) {
+    console.error('Error saving entrance sensor data:', error);
     res.status(500).send('Error saving entrance sensor data');
   }
 });
 
 // Endpoint to receive exit sensor data
-app.post('/addExitData', async (req, res) => {
-  const { count } = req.query;
+app.get('/addExitData', async (req, res) => {
+  const { count, time } = req.query;
 
-  if (!count) {
-    return res.status(400).send('Missing count parameter');
+  if (count === undefined || time === undefined) {
+    return res.status(400).send('Missing count or time parameter');
   }
 
   try {
-    const exitData = new ExitSensor({ count: parseInt(count) });
+    const exitData = new SensorModel({ count: parseInt(count), time: convertToPST(time) });
     await exitData.save();
-    res.status(200).send('Hello World'); // Send 'Hello World' on successful save
+    res.status(200).send('Exit sensor data saved successfully');
   } catch (error) {
+    console.error('Error saving exit sensor data:', error);
     res.status(500).send('Error saving exit sensor data');
   }
 });
 
+// Function to parse time string in the format "MM/DD/YY/HH:MM:SS" and convert it to PST
+function convertToPST(timeString) {
+  const [month, day, year, time] = timeString.split('/');
+  const [hour, minute, second] = time.split(':');
+  const utcTime = moment.tz(`20${year}-${month}-${day}T${hour}:${minute}:${second}`, "UTC");
+  const pstTime = utcTime.clone().tz("Asia/Manila").toDate();
+  return pstTime;
+}
+
+// Route to display all entrance sensor data
+app.get('/getEntranceData', async (req, res) => {
+  try {
+    const entranceData = await SensorModel.find(); // Assuming all data are of the same type
+    res.status(200).json(entranceData);
+  } catch (error) {
+    console.error('Error fetching entrance sensor data:', error);
+    res.status(500).send('Error fetching entrance sensor data');
+  }
+});
+
+// Route to display all exit sensor data
+app.get('/getExitData', async (req, res) => {
+  try {
+    const exitData = await SensorModel.find(); // Assuming all data are of the same type
+    res.status(200).json(exitData);
+  } catch (error) {
+    console.error('Error fetching exit sensor data:', error);
+    res.status(500).send('Error fetching exit sensor data');
+  }
+});
 
 // Route to display "Hello World" on the webpage
 app.get('/', (req, res) => {

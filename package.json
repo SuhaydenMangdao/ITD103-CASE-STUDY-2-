@@ -1,10 +1,10 @@
 {
   "name": "smart-parking-system-project",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -12,6 +12,8 @@
   "dependencies": {
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "moment-timezone": "^0.5.45",
     "mongoose": "^8.4.0"
-  }
+  },
+  "description": ""
 }
