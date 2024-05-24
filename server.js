@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const moment = require('moment-timezone');
 const SensorModel = require('./sensorModel'); // Import the sensor model
+const exitSensorModel = require('./exitsensorModel');
 
 dotenv.config();
 const app = express();
@@ -48,7 +49,7 @@ app.get('/addExitData', async (req, res) => {
   }
 
   try {
-    const exitData = new SensorModel({ count: parseInt(count), time: convertToPST(time) });
+    const exitData = new exitSensorModel({ count: parseInt(count), time: convertToPST(time) });
     await exitData.save();
     res.status(200).send('Exit sensor data saved successfully');
   } catch (error) {
@@ -80,7 +81,7 @@ app.get('/getEntranceData', async (req, res) => {
 // Route to display all exit sensor data
 app.get('/getExitData', async (req, res) => {
   try {
-    const exitData = await SensorModel.find(); // Assuming all data are of the same type
+    const exitData = await exitSensorModel.find(); // Assuming all data are of the same type
     res.status(200).json(exitData);
   } catch (error) {
     console.error('Error fetching exit sensor data:', error);
