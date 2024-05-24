@@ -1,15 +1,3 @@
-/*const mongoose = require('mongoose')
-
-const sensorSchema = new mongoose.Schema({
-    time: Date,
-    count: Number
-})
-
-const SensorModel = mongoose.model('SensorModel', sensorSchema)
-
-module.exports = SensorModel;*/
-
-
 const mongoose = require('mongoose');
 
 // Define schema for the sensor data

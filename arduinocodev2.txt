@@ -36,49 +36,57 @@ void setup() {
   Serial.println("Time synchronized");
 }
 
+unsigned long previousMillis = 0; // Stores the last time the data was sent
+const long interval = 5000;       // Interval at which to send data (milliseconds)
 void loop() {
+  unsigned long currentMillis = millis();
+
   int entranceStatus = digitalRead(entrancePin);
   int exitStatus = digitalRead(exitPin);
   String datetime = getTime();
 
-  if (WiFi.status() == WL_CONNECTED) {
-    HTTPClient http;
+  if (currentMillis - previousMillis >= interval) {
+    // Save the last time the data was sent
+    previousMillis = currentMillis;
 
-    // Construct URL for entrance data
-    String entranceUrl = String(serverIP) + "/addEntranceData?count=" + String(entranceStatus) + "&time=" + datetime;
-    http.begin(wifiClient, entranceUrl);
-    int entranceResponseCode = http.GET();
-    if (entranceResponseCode > 0) {
-      String response = http.getString();
-      Serial.println(entranceResponseCode);
-      Serial.println(response);
-    } else {
-      Serial.print("Error on entrance GET: ");
-      Serial.println(entranceResponseCode);
-      Serial.println(http.errorToString(entranceResponseCode).c_str());
-    }
-    http.end();
+    if (WiFi.status() == WL_CONNECTED) {
+      HTTPClient http;
 
-    // Construct URL for exit data
-    String exitUrl = String(serverIP) + "/addExitData?count=" + String(exitStatus) + "&time=" + datetime;
-    http.begin(wifiClient, exitUrl);
-    int exitResponseCode = http.GET();
-    if (exitResponseCode > 0) {
-      String response = http.getString();
-      Serial.println(exitResponseCode);
-      Serial.println(response);
+      // Construct URL for entrance data
+      String entranceUrl = String(serverIP) + "/addEntranceData?count=" + String(entranceStatus) + "&time=" + datetime;
+      http.begin(wifiClient, entranceUrl);
+      int entranceResponseCode = http.GET();
+      if (entranceResponseCode > 0) {
+        String response = http.getString();
+        Serial.println(entranceResponseCode);
+        Serial.println(response);
+      } else {
+        Serial.print("Error on entrance GET: ");
+        Serial.println(entranceResponseCode);
+        Serial.println(http.errorToString(entranceResponseCode).c_str());
+      }
+      http.end();
+
+      // Construct URL for exit data
+      String exitUrl = String(serverIP) + "/addExitData?count=" + String(exitStatus) + "&time=" + datetime;
+      http.begin(wifiClient, exitUrl);
+      int exitResponseCode = http.GET();
+      if (exitResponseCode > 0) {
+        String response = http.getString();
+        Serial.println(exitResponseCode);
+        Serial.println(response);
+      } else {
+        Serial.print("Error on exit GET: ");
+        Serial.println(exitResponseCode);
+        Serial.println(http.errorToString(exitResponseCode).c_str());
+      }
+      http.end();
     } else {
-      Serial.print("Error on exit GET: ");
-      Serial.println(exitResponseCode);
-      Serial.println(http.errorToString(exitResponseCode).c_str());
+      Serial.println("Error in WiFi connection");
     }
-    http.end();
-  } else {
-    Serial.println("Error in WiFi connection");
   }
-
-  delay(5000); // Wait for 5 seconds before sending the next set of data
 }
+
 
 String getTime() {
   time_t now;
