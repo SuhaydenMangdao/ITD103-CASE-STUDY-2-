@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Data</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Entrance Sensor Data</h1>
+    <table id="entranceData">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be dynamically added here -->
+        </tbody>
+    </table>
+
+    <h1>Exit Sensor Data</h1>
+    <table id="exitData">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be dynamically added here -->
+        </tbody>
+    </table>
+
+    <script>
+        // Function to fetch and display entrance sensor data
+        async function fetchEntranceData() {
+            const response = await fetch('/getEntranceData');
+            const data = await response.json();
+            const tableBody = document.querySelector('#entranceData tbody');
+            tableBody.innerHTML = '';
+            data.forEach(entry => {
+                const row = `<tr><td>${new Date(entry.time).toLocaleString()}</td><td>${entry.count}</td></tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        // Function to fetch and display exit sensor data
+        async function fetchExitData() {
+            const response = await fetch('/getExitData');
+            const data = await response.json();
+            const tableBody = document.querySelector('#exitData tbody');
+            tableBody.innerHTML = '';
+            data.forEach(entry => {
+                const row = `<tr><td>${new Date(entry.time).toLocaleString()}</td><td>${entry.count}</td></tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        // Fetch data when the page loads
+        fetchEntranceData();
+        fetchExitData();
+    </script>
+</body>
+</html>
